@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/noppawitt/admintools/util"
 	"flag"
 	"fmt"
 	"log"
@@ -27,6 +28,7 @@ func init() {
 	flag.StringVar(&ENV, "env", "development", "Application's environment")
 	flag.Parse()
 	fmt.Printf("Server is using %s environment\n", ENV)
+	util.RegisterCustomValidator()
 }
 
 func main() {

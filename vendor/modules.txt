@@ -1,5 +1,9 @@
-# cloud.google.com/go v0.30.0
+# cloud.google.com/go v0.31.0
 cloud.google.com/go/civil
+# github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
+github.com/asaskevich/govalidator
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/denisenkom/go-mssqldb v0.0.0-20181014144952-4e0d7dc8888f
 github.com/denisenkom/go-mssqldb
 github.com/denisenkom/go-mssqldb/internal/cp
@@ -10,5 +14,14 @@ github.com/jinzhu/gorm/dialects/mssql
 github.com/jinzhu/gorm
 # github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
 github.com/jinzhu/inflection
-# golang.org/x/crypto v0.0.0-20181015023909-0c41d7ab0a0e
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/objx v0.1.1
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.2.2
+github.com/stretchr/testify/mock
+github.com/stretchr/testify/assert
+# golang.org/x/crypto v0.0.0-20181024171144-74cb1d3d52f4
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 golang.org/x/crypto/md4
