@@ -1,0 +1,4 @@
+{
+  "port": 5000,
+  "dbURL": "sqlserver://username:password@host:1433?database=admin_tools"
+}

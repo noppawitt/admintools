@@ -1,0 +1,4 @@
+/tmp
+/bin
+config.dev.json
+config.prod.json
