@@ -23,7 +23,7 @@ func NewAuthController(s service.AuthService) *AuthController {
 // Router is returns auth router
 func (c *AuthController) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Post("/token", c.Auth)
+	r.Post("/token", c.token)
 	return r
 }
 
@@ -32,8 +32,7 @@ const (
 	refreshTokenGrantType = "refreshToken"
 )
 
-// Auth provides auth service
-func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) token(w http.ResponseWriter, r *http.Request) {
 	request := model.AuthRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		panic(err)

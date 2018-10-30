@@ -28,21 +28,20 @@ func NewApplicationController(s service.ApplicationService) *ApplicationControll
 // Router returns application router
 func (c *ApplicationController) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Post("/", c.Create)
-	r.Get("/", c.Get)
-	r.Get("/{id}", c.GetByID)
-	r.Get("/page/{page}", c.GetPage)
-	r.Put("/{id}", c.Update)
-	r.Delete("/{id}", c.Delete)
-	r.Get("/{id}/sp", c.GetStoredProcedure)
-	r.Get("/{id}/view", c.GetView)
-	r.Get("/{id}/sp/{name}/parameter", c.GetParameter)
-	r.Get("/{id}/view/{name}/parameter", c.GetParameter)
+	r.Post("/", c.create)
+	r.Get("/", c.get)
+	r.Get("/{id}", c.getByID)
+	r.Get("/page/{page}", c.getPage)
+	r.Put("/{id}", c.update)
+	r.Delete("/{id}", c.delete)
+	r.Get("/{id}/sp", c.getStoredProcedure)
+	r.Get("/{id}/view", c.getView)
+	r.Get("/{id}/sp/{name}/parameter", c.getParameter)
+	r.Get("/{id}/view/{name}/parameter", c.getParameter)
 	return r
 }
 
-// Create creates an application
-func (c *ApplicationController) Create(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) create(w http.ResponseWriter, r *http.Request) {
 	application := model.Application{}
 	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
 		panic(err)
@@ -58,8 +57,7 @@ func (c *ApplicationController) Create(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, &application)
 }
 
-// Get returns applications
-func (c *ApplicationController) Get(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) get(w http.ResponseWriter, r *http.Request) {
 	applications, err := c.Service.Repo().Find()
 	if err != nil {
 		panic(err)
@@ -67,8 +65,7 @@ func (c *ApplicationController) Get(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, applications)
 }
 
-// GetByID returns an application with giving id
-func (c *ApplicationController) GetByID(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) getByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)
@@ -80,8 +77,7 @@ func (c *ApplicationController) GetByID(w http.ResponseWriter, r *http.Request) 
 	c.JSON(w, http.StatusOK, application)
 }
 
-// GetPage returns application page
-func (c *ApplicationController) GetPage(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) getPage(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
 		Applications []model.Application `json:"applications"`
 		Count        int                 `json:"count"`
@@ -125,8 +121,7 @@ func (c *ApplicationController) GetPage(w http.ResponseWriter, r *http.Request) 
 	c.JSON(w, http.StatusOK, response)
 }
 
-// Update updates an application
-func (c *ApplicationController) Update(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) update(w http.ResponseWriter, r *http.Request) {
 	request := model.Application{}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		panic(err)
@@ -151,8 +146,7 @@ func (c *ApplicationController) Update(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, application)
 }
 
-// Delete deletes an application
-func (c *ApplicationController) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) delete(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
 		Message string `json:"message"`
 	}
@@ -167,8 +161,7 @@ func (c *ApplicationController) Delete(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, response)
 }
 
-// GetStoredProcedure returns external stored procedure
-func (c *ApplicationController) GetStoredProcedure(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) getStoredProcedure(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)
@@ -180,8 +173,7 @@ func (c *ApplicationController) GetStoredProcedure(w http.ResponseWriter, r *htt
 	c.JSON(w, http.StatusOK, storedProcedures)
 }
 
-// GetView returns external views
-func (c *ApplicationController) GetView(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) getView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)
@@ -193,8 +185,7 @@ func (c *ApplicationController) GetView(w http.ResponseWriter, r *http.Request) 
 	c.JSON(w, http.StatusOK, views)
 }
 
-// GetParameter returns external parameters
-func (c *ApplicationController) GetParameter(w http.ResponseWriter, r *http.Request) {
+func (c *ApplicationController) getParameter(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)

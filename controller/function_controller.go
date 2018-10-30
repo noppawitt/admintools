@@ -29,17 +29,16 @@ func NewFunctionController(s service.FunctionService, p service.ParameterService
 // Router returns function router
 func (c *FunctionController) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Post("/", c.Create)
-	r.Get("/{id}", c.GetByID)
-	r.Get("/page/{page}", c.GetPage)
-	r.Put("/{id}", c.Update)
-	r.Delete("/{id}", c.Delete)
-	r.Get("/{id}/parameter", c.GetParameter)
+	r.Post("/", c.create)
+	r.Get("/{id}", c.getByID)
+	r.Get("/page/{page}", c.getPage)
+	r.Put("/{id}", c.update)
+	r.Delete("/{id}", c.delete)
+	r.Get("/{id}/parameter", c.getParameter)
 	return r
 }
 
-// Create creates a function
-func (c *FunctionController) Create(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) create(w http.ResponseWriter, r *http.Request) {
 	function := model.Function{}
 	if err := json.NewDecoder(r.Body).Decode(&function); err != nil {
 		panic(err)
@@ -48,8 +47,7 @@ func (c *FunctionController) Create(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, &function)
 }
 
-// GetByID returns a function
-func (c *FunctionController) GetByID(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) getByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)
@@ -61,8 +59,7 @@ func (c *FunctionController) GetByID(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, &function)
 }
 
-// GetPage returns function page
-func (c *FunctionController) GetPage(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) getPage(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
 		Functions []model.Function `json:"functions"`
 		Count     int              `json:"count"`
@@ -106,8 +103,7 @@ func (c *FunctionController) GetPage(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, &response)
 }
 
-// Update updates a function
-func (c *FunctionController) Update(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) update(w http.ResponseWriter, r *http.Request) {
 	request := model.Function{}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		panic(err)
@@ -129,8 +125,7 @@ func (c *FunctionController) Update(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, function)
 }
 
-// Delete deletes a function
-func (c *FunctionController) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) delete(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
 		Message string `json:"message"`
 	}
@@ -145,8 +140,7 @@ func (c *FunctionController) Delete(w http.ResponseWriter, r *http.Request) {
 	c.JSON(w, http.StatusOK, response)
 }
 
-// GetParameter returns parameters
-func (c *FunctionController) GetParameter(w http.ResponseWriter, r *http.Request) {
+func (c *FunctionController) getParameter(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		panic(err)
