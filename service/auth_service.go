@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -40,7 +41,8 @@ func (s *authService) AuthByCode(authRequest *model.AuthRequest) (*model.Token, 
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == http.StatusOK {
+	switch resp.StatusCode {
+	case http.StatusOK:
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
@@ -49,10 +51,11 @@ func (s *authService) AuthByCode(authRequest *model.AuthRequest) (*model.Token, 
 		json.Unmarshal(respBody, &ssoToken)
 
 		// TODO: implement this
-		accessToken, err := s.GenerateAccessToken(1, 300)
+		accessToken, err := s.GenerateAccessToken(1, 3600)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println(accessToken)
 		refreshToken, err := s.GenerateRefreshToken(1)
 		if err != nil {
 			panic(err)
@@ -64,6 +67,8 @@ func (s *authService) AuthByCode(authRequest *model.AuthRequest) (*model.Token, 
 			SSOToken:     ssoToken.AccessToken,
 		}
 		return token, err
+	case http.StatusUnauthorized:
+		return nil, errors.New("Invalid code")
 	}
 
 	return nil, errors.New("Cannot connect to SSO's server")
@@ -73,10 +78,10 @@ func (s *authService) generateToken(id int, expiresIn time.Duration) (string, er
 	expiresAt := int64(0)
 	now := time.Now()
 	if expiresIn > 0 {
-		expiresAt = now.Add(expiresIn).Unix()
+		expiresAt = now.Add(time.Second * expiresIn).Unix()
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, model.TokenClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.TokenClaims{
 		ID:   id,
 		Type: "Bearer",
 		StandardClaims: jwt.StandardClaims{
@@ -84,7 +89,8 @@ func (s *authService) generateToken(id int, expiresIn time.Duration) (string, er
 			ExpiresAt: expiresAt,
 		},
 	})
-	return token.SignedString(s.cfg.Secret)
+	fmt.Println(token)
+	return token.SignedString([]byte(s.cfg.Secret))
 }
 
 func (s *authService) GenerateAccessToken(id int, expiresIn time.Duration) (string, error) {

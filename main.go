@@ -92,10 +92,6 @@ func main() {
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		index.Execute(w, nil)
 	})
-	tmpl := template.Must(template.ParseFiles("view/login.html"))
-	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Execute(w, nil)
-	})
 	r.Mount("/auth", authController.Router())
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(middleware.AuthVerify(cfg.Secret))

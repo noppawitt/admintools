@@ -37,9 +37,15 @@ func (c *AuthController) token(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		panic(err)
 	}
-	token, err := c.Service.AuthByCode(&request)
-	if err != nil {
-		panic(err)
+	if request.GrantType == codeGrantType {
+		token, err := c.Service.AuthByCode(&request)
+		if err != nil {
+			panic(err)
+		}
+		c.JSON(w, http.StatusOK, token)
+	} else if request.GrantType == refreshTokenGrantType {
+		w.Write([]byte("refresh"))
+	} else {
+		w.Write([]byte("Invalid grantType"))
 	}
-	c.JSON(w, http.StatusOK, token)
 }
