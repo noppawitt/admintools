@@ -1,3 +1,5 @@
+run:
+	go run main.go
 dev:
 	fresh
 prod:
@@ -6,9 +8,11 @@ build:
 	go build -o bin/MACOSX/admintools main.go
 	cp config.dev.json bin/MACOSX/config.dev.json
 	cp config.prod.json bin/MACOSX/config.prod.json
-clean:
-	rm -rf bin
+test:
+	go test ./... -cover
 windows:
 	GOOS=windows GOARCH=amd64 go build -o bin/WINDOWS/adminntools.exe main.go
 	cp config.dev.json bin/WINDOWS/config.dev.json
 	cp config.prod.json bin/WINDOWS/config.prod.json
+clean:
+	rm -rf bin

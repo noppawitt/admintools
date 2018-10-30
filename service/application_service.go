@@ -8,8 +8,6 @@ import (
 	"github.com/noppawitt/admintools/util"
 )
 
-const key = "c2a175455bd54c1d4e320991a868a25f"
-
 // ApplicationService provides application service
 type ApplicationService interface {
 	Repo() repository.ApplicationRepository
@@ -23,11 +21,12 @@ type ApplicationService interface {
 type applicationService struct {
 	Repository         repository.ApplicationRepository
 	ExternalRepository repository.ExternalRepository
+	EncryptionKey      string
 }
 
 // NewApplicationService returns application service
-func NewApplicationService(r repository.ApplicationRepository, e repository.ExternalRepository) ApplicationService {
-	return &applicationService{r, e}
+func NewApplicationService(r repository.ApplicationRepository, e repository.ExternalRepository, encryptionKey string) ApplicationService {
+	return &applicationService{r, e, encryptionKey}
 }
 
 func (s *applicationService) Repo() repository.ApplicationRepository {
@@ -36,7 +35,7 @@ func (s *applicationService) Repo() repository.ApplicationRepository {
 
 func (s *applicationService) Create(application *model.Application) error {
 	var err error
-	encryptedPassword, err := util.Encrypt(application.Password, key)
+	encryptedPassword, err := util.Encrypt(application.Password, s.EncryptionKey)
 	if err != nil {
 		return err
 	}
@@ -46,7 +45,7 @@ func (s *applicationService) Create(application *model.Application) error {
 }
 
 func (s *applicationService) getConnectionString(application *model.Application) (string, error) {
-	decryptedPassword, err := util.Decrypt(application.Password, key)
+	decryptedPassword, err := util.Decrypt(application.Password, s.EncryptionKey)
 	if err != nil {
 		return "", err
 	}
