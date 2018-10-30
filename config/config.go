@@ -7,8 +7,12 @@ import (
 
 // Config is an app's configuration
 type Config struct {
-	Port  int    `json:"port"`
-	DBURL string `json:"dbURL"`
+	Port           int    `json:"port"`
+	DBURL          string `json:"dbURL"`
+	EncryptionKey  string `json:"encryptionKey"`
+	Secret         string `json:"secret"`
+	AuthURL        string `json:"authURL"`
+	ConsumerSecret string `json:"consumerSecret"`
 }
 
 func load(path string) (*Config, error) {

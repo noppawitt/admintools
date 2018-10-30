@@ -30,6 +30,7 @@ func (c *ApplicationController) Router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/", c.Create)
 	r.Get("/", c.Get)
+	r.Get("/{id}", c.GetByID)
 	r.Get("/page/{page}", c.GetPage)
 	r.Put("/{id}", c.Update)
 	r.Delete("/{id}", c.Delete)
@@ -43,7 +44,9 @@ func (c *ApplicationController) Router() *chi.Mux {
 // Create creates an application
 func (c *ApplicationController) Create(w http.ResponseWriter, r *http.Request) {
 	application := model.Application{}
-	json.NewDecoder(r.Body).Decode(&application)
+	if err := json.NewDecoder(r.Body).Decode(&application); err != nil {
+		panic(err)
+	}
 	_, err := valid.ValidateStruct(&application)
 	if err != nil {
 		c.Error(w, http.StatusBadRequest, err.Error())
@@ -62,6 +65,19 @@ func (c *ApplicationController) Get(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	c.JSON(w, http.StatusOK, applications)
+}
+
+// GetByID returns an application with giving id
+func (c *ApplicationController) GetByID(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		panic(err)
+	}
+	application, err := c.Service.Repo().FindOne(id)
+	if err != nil {
+		panic(err)
+	}
+	c.JSON(w, http.StatusOK, application)
 }
 
 // GetPage returns application page

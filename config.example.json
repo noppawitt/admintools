@@ -1,4 +1,8 @@
 {
   "port": 5000,
-  "dbURL": "sqlserver://username:password@host:1433?database=admin_tools"
+  "dbURL": "sqlserver://username:password@host:1433?database=admin_tools",
+  "encryptionKey": "32-bits-password-encryption-key!",
+  "secret": "secret",
+  "authURL": "auth-url",
+  "consumerSecret": "consumer-secret"
 }
