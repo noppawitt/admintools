@@ -13,6 +13,7 @@ func Connect(dialect string, cs string) (*gorm.DB, error) {
 
 // AutoMigrate migrates all models to database
 func AutoMigrate(db *gorm.DB) {
+	db.AutoMigrate(&model.User{})
 	db.AutoMigrate(&model.Application{})
 	db.AutoMigrate(&model.Function{})
 	db.AutoMigrate(&model.Parameter{})

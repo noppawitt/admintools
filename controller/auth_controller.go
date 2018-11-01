@@ -15,6 +15,11 @@ type AuthController struct {
 	Service service.AuthService
 }
 
+const (
+	codeGrantType         = "code"
+	refreshTokenGrantType = "refreshToken"
+)
+
 // NewAuthController returns auth controller
 func NewAuthController(s service.AuthService) *AuthController {
 	return &AuthController{Service: s}
@@ -24,28 +29,38 @@ func NewAuthController(s service.AuthService) *AuthController {
 func (c *AuthController) Router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/token", c.token)
+	r.Post("/logout", c.logOut)
 	return r
 }
 
-const (
-	codeGrantType         = "code"
-	refreshTokenGrantType = "refreshToken"
-)
-
 func (c *AuthController) token(w http.ResponseWriter, r *http.Request) {
-	request := model.AuthRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	var token *model.Token
+	var err error
+
+	request := &model.AuthRequest{}
+	if err = json.NewDecoder(r.Body).Decode(request); err != nil {
 		panic(err)
 	}
 	if request.GrantType == codeGrantType {
-		token, err := c.Service.AuthByCode(&request)
-		if err != nil {
-			panic(err)
-		}
-		c.JSON(w, http.StatusOK, token)
+		token, err = c.Service.AuthByCode(request)
 	} else if request.GrantType == refreshTokenGrantType {
-		w.Write([]byte("refresh"))
-	} else {
-		w.Write([]byte("Invalid grantType"))
+		token, err = c.Service.AuthByRefreshToken(request)
 	}
+	if err != nil {
+		panic(err)
+	}
+	c.JSON(w, http.StatusOK, token)
+}
+
+func (c *AuthController) logOut(w http.ResponseWriter, r *http.Request) {
+	request := &model.Token{}
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+		panic(err)
+	}
+	if err := c.Service.LogOut(request.AccessToken, request.SSOAccessToken, ""); err != nil {
+		panic(err)
+	}
+	c.JSON(w, http.StatusOK, map[string]string{
+		"message": "success"
+	})
 }

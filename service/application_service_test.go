@@ -22,6 +22,18 @@ func TestRepo(t *testing.T) {
 	assert.Implements(t, (*repository.ApplicationRepository)(nil), repo)
 }
 
+// func TestCreate(t *testing.T) {
+// 	r := &mocks.ApplicationRepository{}
+// 	r.On("Create", &model.Application, func(application *model.Application) error {
+// 		application.ID = 1
+// 		application.CreatedAt = time.Now()
+// 		application.UpdatedAt = time.Now()
+// 		return nil
+// 	})
+// 	e := mock.ExternalRepository{}
+// 	applicationService := NewApplicationService(r, e, key)
+// }
+
 func TestGetConnectionString(t *testing.T) {
 	r := &mocks.ApplicationRepository{}
 	e := &mocks.ExternalRepository{}
