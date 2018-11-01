@@ -3,16 +3,19 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"time"
 )
 
 // Config is an app's configuration
 type Config struct {
-	Port           int    `json:"port"`
-	DBURL          string `json:"dbURL"`
-	EncryptionKey  string `json:"encryptionKey"`
-	Secret         string `json:"secret"`
-	AuthURL        string `json:"authURL"`
-	ConsumerSecret string `json:"consumerSecret"`
+	Port                   int           `json:"port"`
+	DBURL                  string        `json:"dbURL"`
+	EncryptionKey          string        `json:"encryptionKey"`
+	Secret                 string        `json:"secret"`
+	AccessTokenExpiryTime  time.Duration `json:"accessTokenExpiryTime"`
+	RefreshTokenExpiryTime time.Duration `json:"refreshTokenExpiryTime"`
+	AuthURL                string        `json:"authURL"`
+	ConsumerSecret         string        `json:"consumerSecret"`
 }
 
 func load(path string) (*Config, error) {

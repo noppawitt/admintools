@@ -22,10 +22,8 @@ import (
 type AuthService interface {
 	AuthByCode(authRequest *model.AuthRequest) (*model.Token, error)
 	AuthByRefreshToken(authRequest *model.AuthRequest) (*model.Token, error)
-	LogOut(accessToken string, ssoAccessToken string, redirectURL string) error
-	generateToken(id string, expiresIn time.Duration) (string, error)
-	GenerateAccessToken(id string, expiresIn time.Duration) (string, error)
-	GenerateRefreshToken(id string) (string, error)
+	LogOut(userID string) error
+	generateToken(user *model.User, expiresIn time.Duration) (string, error)
 	getUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error)
 }
 
@@ -58,7 +56,9 @@ func (s *authService) AuthByCode(authRequest *model.AuthRequest) (*model.Token, 
 			return nil, err
 		}
 		ssoToken := &model.SSOToken{}
-		json.Unmarshal(respBody, ssoToken)
+		if err = json.Unmarshal(respBody, ssoToken); err != nil {
+			return nil, err
+		}
 
 		// Create user if not exists and store token in database
 		userInfo, err := s.getUserInfo(ssoToken.AccessToken, authRequest.ConsumerKey)
@@ -85,12 +85,11 @@ func (s *authService) AuthByCode(authRequest *model.AuthRequest) (*model.Token, 
 			user.SSORefreshToken = ssoToken.RefreshToken
 		}
 
-		// FIXME: move time to config
-		accessToken, err := s.GenerateAccessToken(user.ID, 3600)
+		accessToken, err := s.generateToken(user, s.cfg.AccessTokenExpiryTime)
 		if err != nil {
 			panic(err)
 		}
-		refreshToken, err := s.GenerateRefreshToken(user.ID)
+		refreshToken, err := s.generateToken(user, s.cfg.RefreshTokenExpiryTime)
 		if err != nil {
 			panic(err)
 		}
@@ -143,7 +142,9 @@ func (s *authService) AuthByRefreshToken(authRequest *model.AuthRequest) (*model
 			return nil, err
 		}
 		ssoToken := &model.SSOToken{}
-		json.Unmarshal(respBody, ssoToken)
+		if err = json.Unmarshal(respBody, ssoToken); err != nil {
+			return nil, err
+		}
 
 		user.SSORefreshToken = ssoToken.RefreshToken
 		err = s.userRepo.Save(user)
@@ -151,8 +152,7 @@ func (s *authService) AuthByRefreshToken(authRequest *model.AuthRequest) (*model
 			return nil, err
 		}
 
-		// FIXME: move time to config
-		accessToken, err := s.GenerateAccessToken(user.ID, 3600)
+		accessToken, err := s.generateToken(user, s.cfg.AccessTokenExpiryTime)
 		if err != nil {
 			return nil, err
 		}
@@ -164,22 +164,16 @@ func (s *authService) AuthByRefreshToken(authRequest *model.AuthRequest) (*model
 
 		return token, err
 	case http.StatusUnauthorized:
+		// Force logout internal service if can not refresh token from SSO
+		s.LogOut(claims.ID)
 		return nil, errors.New("Invalid code")
 	}
 
 	return nil, errors.New("Cannot connect to SSO's server")
 }
 
-func (s *authService) LogOut(accessToken string, ssoAccessToken string, redirectURL string) error {
-	err := s.authAgent.GetLogOut(ssoAccessToken, redirectURL)
-	if err != nil {
-		return err
-	}
-	claims, err := util.ValidateToken(accessToken, s.cfg.Secret)
-	if err != nil {
-		return err
-	}
-	user, err := s.userRepo.FindOne(claims.ID)
+func (s *authService) LogOut(userID string) error {
+	user, err := s.userRepo.FindOne(userID)
 	if err != nil {
 		return err
 	}
@@ -189,7 +183,7 @@ func (s *authService) LogOut(accessToken string, ssoAccessToken string, redirect
 	return nil
 }
 
-func (s *authService) generateToken(id string, expiresIn time.Duration) (string, error) {
+func (s *authService) generateToken(user *model.User, expiresIn time.Duration) (string, error) {
 	expiresAt := int64(0)
 	now := time.Now()
 	if expiresIn > 0 {
@@ -197,22 +191,16 @@ func (s *authService) generateToken(id string, expiresIn time.Duration) (string,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.TokenClaims{
-		ID:   id,
-		Type: "Bearer",
+		ID:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Type:      "Bearer",
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  now.Unix(),
 			ExpiresAt: expiresAt,
 		},
 	})
 	return token.SignedString([]byte(s.cfg.Secret))
-}
-
-func (s *authService) GenerateAccessToken(id string, expiresIn time.Duration) (string, error) {
-	return s.generateToken(id, expiresIn)
-}
-
-func (s *authService) GenerateRefreshToken(id string) (string, error) {
-	return s.generateToken(id, 0)
 }
 
 func (s *authService) getUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error) {
@@ -232,7 +220,9 @@ func (s *authService) getUserInfo(accessToken string, consumerKey string) (*mode
 			return nil, err
 		}
 		userInfo := &model.UserInfo{}
-		json.Unmarshal(respBody, &userInfo)
+		if err = json.Unmarshal(respBody, &userInfo); err != nil {
+			return nil, err
+		}
 		return userInfo, nil
 	default:
 		return nil, err

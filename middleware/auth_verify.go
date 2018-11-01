@@ -1,13 +1,11 @@
 package middleware
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/noppawitt/admintools/model"
-
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/noppawitt/admintools/util"
 )
 
 type contextKey string
@@ -19,21 +17,14 @@ func AuthVerify(secret string) Middleware {
 			authHeader := r.Header.Get("Authorization")
 			tokenString := strings.Split(authHeader, "Bearer ")
 
-			token, err := jwt.ParseWithClaims(tokenString[1], &model.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-				}
-
-				return []byte(secret), nil
-			})
-
-			if claims, ok := token.Claims.(*model.TokenClaims); ok && token.Valid {
-				fmt.Println(claims.ID)
-				next.ServeHTTP(w, r)
-			} else {
-				fmt.Println(err)
+			claims, err := util.ValidateToken(tokenString[1], secret)
+			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
+				return
 			}
+
+			ctx := context.WithValue(r.Context(), contextKey("User"), claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

@@ -3,6 +3,8 @@
   "dbURL": "sqlserver://username:password@host:1433?database=admin_tools",
   "encryptionKey": "32-bits-password-encryption-key!",
   "secret": "secret",
+  "accessTokenExpiryTime": 300,
+  "refreshTokenExpiryTime": 0,
   "authURL": "auth-url",
   "consumerSecret": "consumer-secret"
 }

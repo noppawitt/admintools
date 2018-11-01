@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.LogMode(true)
+	// db.LogMode(true)
 	// Migrate database
 	infrastructure.AutoMigrate(db)
 

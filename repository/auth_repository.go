@@ -12,10 +12,9 @@ import (
 
 // AuthRepository provides access an authentication external api (SSO)
 type AuthRepository interface {
-	// GetTokenByCode(code string, redirectURL string, consumerKey string, consumerSecret string) (*model.SSOToken, error)
-	// GetTokenByRefreshToken(refreshToken string, consumerKey string, consumerSecret string) (*model.SSOToken, error)
-	// GetUserInfo(accessToken string, consumerKey string, consumerSecret string) (*model.UserInfo, error)
-	GetLogOut(ssoAccessToken string, redirectURL string) error
+	GetSSOTokenByCode(code string, redirectURL string, consumerKey string) (*model.SSOToken, error)
+	GetSSOTokenByRefreshToken(refreshToken string, consumerKey string) (*model.SSOToken, error)
+	GetUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error)
 }
 
 type authAgent struct {
@@ -27,23 +26,82 @@ func NewAuthAgent(cfg *config.Config) AuthRepository {
 	return &authAgent{cfg}
 }
 
-func (a *authAgent) GetLogOut(ssoAccessToken string, redirectURL string) error {
-	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/auth/logout?key="+ssoAccessToken+"&redirectURL="+redirectURL, nil)
+func (a *authAgent) GetSSOTokenByCode(code string, redirectURL string, consumerKey string) (*model.SSOToken, error) {
+	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/auth/accesstoken", nil)
+	req.Header.Add("code", code)
+	req.Header.Add("redirectURL", redirectURL)
+	req.Header.Add("consumerKey", consumerKey)
+	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	switch resp.StatusCode {
-	case http.StatusSeeOther:
+	case http.StatusOK:
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		ssoToken := &model.SSOToken{}
 		json.Unmarshal(respBody, ssoToken)
-		return nil
+
+		return ssoToken, nil
+
+	case http.StatusUnauthorized:
+		return nil, errors.New("Invalid code")
+	}
+
+	return nil, errors.New("Cannot connect to SSO's server")
+}
+
+func (a *authAgent) GetSSOTokenByRefreshToken(ssoRefreshToken string, consumerKey string) (*model.SSOToken, error) {
+	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/auth/refresh", nil)
+	req.Header.Add("refreshToken", ssoRefreshToken)
+	req.Header.Add("consumerKey", consumerKey)
+	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	switch resp.StatusCode {
+	case http.StatusOK:
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		ssoToken := &model.SSOToken{}
+		json.Unmarshal(respBody, ssoToken)
+
+		return ssoToken, nil
+	case http.StatusUnauthorized:
+		return nil, errors.New("Invalid code")
+	}
+
+	return nil, errors.New("Cannot connect to SSO's server")
+}
+
+func (a *authAgent) GetUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error) {
+	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/user/info", nil)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+	req.Header.Add("consumerKey", consumerKey)
+	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	switch resp.StatusCode {
+	case http.StatusOK:
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		userInfo := &model.UserInfo{}
+		json.Unmarshal(respBody, &userInfo)
+		return userInfo, nil
 	default:
-		return errors.New("invalid access token")
+		return nil, err
 	}
 }

@@ -29,7 +29,6 @@ func NewAuthController(s service.AuthService) *AuthController {
 func (c *AuthController) Router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/token", c.token)
-	r.Post("/logout", c.logOut)
 	return r
 }
 
@@ -47,20 +46,8 @@ func (c *AuthController) token(w http.ResponseWriter, r *http.Request) {
 		token, err = c.Service.AuthByRefreshToken(request)
 	}
 	if err != nil {
-		panic(err)
+		c.Error(w, http.StatusUnauthorized, "failure")
+		return
 	}
 	c.JSON(w, http.StatusOK, token)
-}
-
-func (c *AuthController) logOut(w http.ResponseWriter, r *http.Request) {
-	request := &model.Token{}
-	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		panic(err)
-	}
-	if err := c.Service.LogOut(request.AccessToken, request.SSOAccessToken, ""); err != nil {
-		panic(err)
-	}
-	c.JSON(w, http.StatusOK, map[string]string{
-		"message": "success",
-	})
 }
