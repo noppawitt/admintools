@@ -61,6 +61,6 @@ func (c *AuthController) logOut(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	c.JSON(w, http.StatusOK, map[string]string{
-		"message": "success"
+		"message": "success",
 	})
 }
