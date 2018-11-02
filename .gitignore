@@ -1,7 +1,3 @@
 .vscode
 .env
-/tmp
-/bin
 /dist
-config.dev.json
-config.prod.json
