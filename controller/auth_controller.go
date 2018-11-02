@@ -44,6 +44,9 @@ func (c *AuthController) token(w http.ResponseWriter, r *http.Request) {
 		token, err = c.Service.AuthByCode(request)
 	} else if request.GrantType == refreshTokenGrantType {
 		token, err = c.Service.AuthByRefreshToken(request)
+	} else {
+		c.Error(w, http.StatusUnauthorized, "invalid grant type")
+		return
 	}
 	if err != nil {
 		c.Error(w, http.StatusUnauthorized, "failure")

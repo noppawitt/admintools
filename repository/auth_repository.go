@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -27,11 +28,15 @@ func NewAuthAgent(cfg *config.Config) AuthRepository {
 }
 
 func (a *authAgent) GetSSOTokenByCode(code string, redirectURL string, consumerKey string) (*model.SSOToken, error) {
-	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/auth/accesstoken", nil)
-	req.Header.Add("code", code)
-	req.Header.Add("redirectURL", redirectURL)
-	req.Header.Add("consumerKey", consumerKey)
-	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
+	body := &map[string]string{
+		"code":           code,
+		"redirectURL":    redirectURL,
+		"consumerKey":    consumerKey,
+		"consumerSecret": a.cfg.ConsumerSecret,
+	}
+	jsonStr, _ := json.Marshal(body)
+
+	req, _ := http.NewRequest("POST", a.cfg.AuthURL+"/auth/accesstoken", bytes.NewBuffer(jsonStr))
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -50,16 +55,20 @@ func (a *authAgent) GetSSOTokenByCode(code string, redirectURL string, consumerK
 
 	case http.StatusUnauthorized:
 		return nil, errors.New("Invalid code")
+	default:
+		return nil, errors.New("Cannot connect to SSO's server")
 	}
-
-	return nil, errors.New("Cannot connect to SSO's server")
 }
 
 func (a *authAgent) GetSSOTokenByRefreshToken(ssoRefreshToken string, consumerKey string) (*model.SSOToken, error) {
-	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/auth/refresh", nil)
-	req.Header.Add("refreshToken", ssoRefreshToken)
-	req.Header.Add("consumerKey", consumerKey)
-	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
+	body := &map[string]string{
+		"refreshToken":   ssoRefreshToken,
+		"consumerKey":    consumerKey,
+		"consumerSecret": a.cfg.ConsumerSecret,
+	}
+	jsonStr, _ := json.Marshal(body)
+
+	req, _ := http.NewRequest("POST", a.cfg.AuthURL+"/auth/refresh", bytes.NewBuffer(jsonStr))
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -77,9 +86,9 @@ func (a *authAgent) GetSSOTokenByRefreshToken(ssoRefreshToken string, consumerKe
 		return ssoToken, nil
 	case http.StatusUnauthorized:
 		return nil, errors.New("Invalid code")
+	default:
+		return nil, errors.New("Cannot connect to SSO's server")
 	}
-
-	return nil, errors.New("Cannot connect to SSO's server")
 }
 
 func (a *authAgent) GetUserInfo(ssoAccessToken string, consumerKey string) (*model.UserInfo, error) {
