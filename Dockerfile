@@ -6,8 +6,6 @@ WORKDIR /go/src/github.com/noppawitt/admintools
 
 ENV GO111MODULE on
 
-# ENV APP_ENV development
-
 COPY go.mod go.sum ./
 
 RUN go mod download
@@ -20,6 +18,6 @@ FROM scratch
 
 WORKDIR /go/bin
 
-COPY --from=builder /go/bin/admintools /go/src/github.com/noppawitt/admintools/config/*.json ./
+COPY --from=builder /go/bin/admintools ./
 
 ENTRYPOINT ["./admintools"]
