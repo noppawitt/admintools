@@ -1,4 +1,5 @@
 .vscode
+.env
 /tmp
 /bin
 /dist

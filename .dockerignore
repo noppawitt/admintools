@@ -1,4 +1,5 @@
 .vscode
+.env
 /vendor
 /tmp
 /bin

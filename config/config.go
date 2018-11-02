@@ -1,39 +1,44 @@
 package config
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"time"
+	"os"
+	"strconv"
 )
 
 // Config is an app's configuration
 type Config struct {
-	Port                   int           `json:"port"`
-	DBURL                  string        `json:"dbURL"`
-	EncryptionKey          string        `json:"encryptionKey"`
-	Secret                 string        `json:"secret"`
-	AccessTokenExpiryTime  time.Duration `json:"accessTokenExpiryTime"`
-	RefreshTokenExpiryTime time.Duration `json:"refreshTokenExpiryTime"`
-	AuthURL                string        `json:"authURL"`
-	ConsumerSecret         string        `json:"consumerSecret"`
+	Port                   int
+	DBURL                  string
+	EncryptionKey          string
+	Secret                 string
+	AccessTokenExpiryTime  int
+	RefreshTokenExpiryTime int
+	AuthURL                string
+	ConsumerSecret         string
 }
 
-func load(path string) (*Config, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+// New returns config
+func New() *Config {
 	cfg := &Config{}
-	err = json.Unmarshal(data, cfg)
-	return cfg, err
+	cfg.Port = getEnvInt("PORT")
+	cfg.DBURL = getEnvStr("DB_URL")
+	cfg.EncryptionKey = getEnvStr("ENCRYPTION_KEY")
+	cfg.Secret = getEnvStr("SECRET")
+	cfg.AccessTokenExpiryTime = getEnvInt("ACCESS_TOKEN_EXPIRY_TIME")
+	cfg.RefreshTokenExpiryTime = getEnvInt("REFRESH_TOKEN_EXPIRY_TIME")
+	cfg.AuthURL = getEnvStr("AUTH_URL")
+	cfg.ConsumerSecret = getEnvStr("CONSUMER_SECRET")
+	return cfg
 }
 
-// Dev return development config
-func Dev() (*Config, error) {
-	return load("config.dev.json")
+func getEnvStr(key string) string {
+	return os.Getenv(key)
 }
 
-// Prod return production config
-func Prod() (*Config, error) {
-	return load("config.prod.json")
+func getEnvInt(key string) int {
+	val, err := strconv.Atoi(os.Getenv(key))
+	if err != nil {
+		panic(err)
+	}
+	return val
 }

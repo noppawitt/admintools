@@ -4,7 +4,9 @@ RUN apk add git
 
 WORKDIR /go/src/github.com/noppawitt/admintools
 
-ENV GO111MODULE=on
+ENV GO111MODULE on
+
+# ENV APP_ENV development
 
 COPY go.mod go.sum ./
 

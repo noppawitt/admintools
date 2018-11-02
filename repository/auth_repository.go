@@ -13,8 +13,8 @@ import (
 // AuthRepository provides access an authentication external api (SSO)
 type AuthRepository interface {
 	GetSSOTokenByCode(code string, redirectURL string, consumerKey string) (*model.SSOToken, error)
-	GetSSOTokenByRefreshToken(refreshToken string, consumerKey string) (*model.SSOToken, error)
-	GetUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error)
+	GetSSOTokenByRefreshToken(ssoRefreshToken string, consumerKey string) (*model.SSOToken, error)
+	GetUserInfo(ssoAccessToken string, consumerKey string) (*model.UserInfo, error)
 }
 
 type authAgent struct {
@@ -82,9 +82,9 @@ func (a *authAgent) GetSSOTokenByRefreshToken(ssoRefreshToken string, consumerKe
 	return nil, errors.New("Cannot connect to SSO's server")
 }
 
-func (a *authAgent) GetUserInfo(accessToken string, consumerKey string) (*model.UserInfo, error) {
+func (a *authAgent) GetUserInfo(ssoAccessToken string, consumerKey string) (*model.UserInfo, error) {
 	req, _ := http.NewRequest("GET", a.cfg.AuthURL+"/user/info", nil)
-	req.Header.Add("Authorization", "Bearer "+accessToken)
+	req.Header.Add("Authorization", "Bearer "+ssoAccessToken)
 	req.Header.Add("consumerKey", consumerKey)
 	req.Header.Add("consumerSecret", a.cfg.ConsumerSecret)
 	client := &http.Client{}

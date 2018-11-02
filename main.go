@@ -6,47 +6,39 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/noppawitt/admintools/util"
-
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 	"github.com/noppawitt/admintools/config"
 	"github.com/noppawitt/admintools/controller"
 	"github.com/noppawitt/admintools/infrastructure"
 	"github.com/noppawitt/admintools/middleware"
 	"github.com/noppawitt/admintools/repository"
 	"github.com/noppawitt/admintools/service"
+	"github.com/noppawitt/admintools/util"
 
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 )
 
-var (
-	// ENV is an application's environment
-	ENV string
-	err error
-)
-
 func init() {
-	flag.StringVar(&ENV, "env", "development", "Application's environment")
+	var dotEnv bool
+
+	flag.BoolVar(&dotEnv, "dotenv", false, "Load environents from .env")
 	flag.Parse()
-	fmt.Printf("Server is using %s environment\n", ENV)
+
+	if dotEnv {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+	}
 
 	// Register custom validator
 	util.RegisterCustomValidator()
 }
 
 func main() {
-	// Init configuration
-	var cfg *config.Config
-	if ENV == "development" {
-		cfg, err = config.Dev()
-	} else if ENV == "production" {
-		cfg, err = config.Prod()
-	} else {
-		panic("Incorrect environment")
-	}
-	if err != nil {
-		panic(err)
-	}
+	// Init config
+	cfg := config.New()
 
 	// Connect to database
 	db, err := infrastructure.Connect("mssql", cfg.DBURL)
