@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/noppawitt/admintools/model"
 	"github.com/noppawitt/admintools/repository"
 	"github.com/noppawitt/admintools/util"
@@ -12,7 +10,6 @@ import (
 type ApplicationService interface {
 	Repo() repository.ApplicationRepository
 	Create(application *model.Application) error
-	getConnectionString(application *model.Application) (string, error)
 	GetStoredProcedure(id int) ([]model.ExternalStoredProcedure, error)
 	GetView(id int) ([]model.ExternalView, error)
 	GetParameter(id int, name string) ([]model.ExternalParameter, error)
@@ -44,32 +41,53 @@ func (s *applicationService) Create(application *model.Application) error {
 	return err
 }
 
-func (s *applicationService) getConnectionString(application *model.Application) (string, error) {
-	decryptedPassword, err := util.Decrypt(application.Password, s.EncryptionKey)
-	if err != nil {
-		return "", err
-	}
-	cs := fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&encrypt=disable", application.Username, decryptedPassword, application.Host, application.Port, application.DBName)
-	return cs, err
-}
-
 func (s *applicationService) GetStoredProcedure(id int) ([]model.ExternalStoredProcedure, error) {
 	application, err := s.Repository.FindOne(id)
-	cs, err := s.getConnectionString(application)
+	password, err := util.Decrypt(application.Password, s.EncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	cs := util.GetConnectionString(
+		application.Username,
+		password,
+		application.Host,
+		application.Port,
+		application.DBName,
+	)
 	storedProcedures, err := s.ExternalRepository.FindStoredProcedure(cs)
 	return storedProcedures, err
 }
 
 func (s *applicationService) GetView(id int) ([]model.ExternalView, error) {
 	application, err := s.Repository.FindOne(id)
-	cs, err := s.getConnectionString(application)
+	password, err := util.Decrypt(application.Password, s.EncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	cs := util.GetConnectionString(
+		application.Username,
+		password,
+		application.Host,
+		application.Port,
+		application.DBName,
+	)
 	views, err := s.ExternalRepository.FindView(cs)
 	return views, err
 }
 
 func (s *applicationService) GetParameter(id int, name string) ([]model.ExternalParameter, error) {
 	application, err := s.Repository.FindOne(id)
-	cs, err := s.getConnectionString(application)
+	password, err := util.Decrypt(application.Password, s.EncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+	cs := util.GetConnectionString(
+		application.Username,
+		password,
+		application.Host,
+		application.Port,
+		application.DBName,
+	)
 	parameters, err := s.ExternalRepository.FindParameter(cs, name)
 	return parameters, err
 }

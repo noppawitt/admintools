@@ -10,6 +10,7 @@ type ExternalRepository interface {
 	FindStoredProcedure(cs string) ([]model.ExternalStoredProcedure, error)
 	FindView(cs string) ([]model.ExternalView, error)
 	FindParameter(cs string, name string) ([]model.ExternalParameter, error)
+	Exec(cs string, spName string, parameters []model.ParameterRequest) error
 }
 
 type externalRepository struct {
@@ -24,7 +25,7 @@ func (r *externalRepository) FindStoredProcedure(cs string) ([]model.ExternalSto
 	db, err := infrastructure.Connect("mssql", cs)
 	defer db.Close()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	storedProcedures := []model.ExternalStoredProcedure{}
 	err = db.Raw("select name from sys.procedures").Scan(&storedProcedures).Error
@@ -35,7 +36,7 @@ func (r *externalRepository) FindView(cs string) ([]model.ExternalView, error) {
 	db, err := infrastructure.Connect("mssql", cs)
 	defer db.Close()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	views := []model.ExternalView{}
 	err = db.Raw("select name from sys.views").Scan(&views).Error
@@ -46,7 +47,7 @@ func (r *externalRepository) FindParameter(cs string, name string) ([]model.Exte
 	db, err := infrastructure.Connect("mssql", cs)
 	defer db.Close()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	parameters := []model.ExternalParameter{}
 	err = db.Raw(`
@@ -59,4 +60,19 @@ func (r *externalRepository) FindParameter(cs string, name string) ([]model.Exte
 		name,
 	).Scan(&parameters).Error
 	return parameters, err
+}
+
+func (r *externalRepository) Exec(cs string, spName string, parameters []model.ParameterRequest) error {
+	db, err := infrastructure.Connect("mssql", cs)
+	defer db.Close()
+	if err != nil {
+		return err
+	}
+
+	q := "exec " + spName
+	for _, p := range parameters {
+		q = q + " " + p.Name + " = " + p.Value
+	}
+	err = db.Exec(q).Error
+	return err
 }

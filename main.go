@@ -76,7 +76,7 @@ func main() {
 
 	r.Mount("/auth", authController.Router())
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(middleware.AuthVerify(cfg.Secret))
+		// r.Use(middleware.AuthVerify(cfg.Secret))
 		r.Mount("/application", applicationController.Router())
 		r.Mount("/function", functionController.Router())
 	})

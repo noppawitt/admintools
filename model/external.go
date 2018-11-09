@@ -16,3 +16,9 @@ type ExternalParameter struct {
 	Type   string `json:"type"`
 	Length int    `json:"length"`
 }
+
+// ParameterRequest is a parameter request type
+type ParameterRequest struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
